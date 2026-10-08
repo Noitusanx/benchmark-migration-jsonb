@@ -1,4 +1,4 @@
-# Lab migrasi JSONB user: selective upsert dengan Java
+# benchmark-migration-jsonb
 
 Lab ini membandingkan **JDBC, MyBatis, Spring Data JPA Repository, dan EntityManager**.
 Sumbernya tabel `lab_java.m_user` dengan tiga kolom JSONB: `"group"`, `coupons`, dan
@@ -356,4 +356,3 @@ Referensi resmi:
 - https://mybatis.org/mybatis-3/java-api.html
 - https://jdbc.postgresql.org/documentation/use/
 - https://www.postgresql.org/docs/17/functions-json.html
-# benchmark-migration-jsonb
