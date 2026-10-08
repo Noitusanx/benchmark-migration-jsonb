@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: jsonb_migration_lab
+      POSTGRES_USER: lab
+      POSTGRES_PASSWORD: lab_only
+    ports:
+      - "127.0.0.1:55434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lab -d jsonb_migration_lab"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  benchmark:
+    build: .
+    profiles: ["tools"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/jsonb_migration_lab?reWriteBatchedInserts=true
+      DB_USER: lab
+      DB_PASSWORD: lab_only
+      BENCH_USERS: ${BENCH_USERS:-1000,5000,10000}
+      METHODS: ${METHODS:-jdbc,mybatis,jpa_repository,entity_manager}
+      SCENARIOS: ${SCENARIOS:-insert,update,mixed,unchanged}
+      USER_BATCH_SIZE: ${USER_BATCH_SIZE:-500}
+      WRITE_BATCH_SIZE: ${WRITE_BATCH_SIZE:-100}
+      REPETITIONS: ${REPETITIONS:-5}
+      WARMUPS: ${WARMUPS:-1}
+      OUTPUT_DIR: /app/results
+    volumes:
+      - ./results:/app/results
+
+  tests:
+    build:
+      context: .
+      target: build
+    profiles: ["tools"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/jsonb_migration_lab?reWriteBatchedInserts=true
+      DB_USER: lab
+      DB_PASSWORD: lab_only
+      RUN_DB_TESTS: "true"
+      USER_BATCH_SIZE: "500"
+      WRITE_BATCH_SIZE: "100"
+    command: ["mvn", "-B", "test"]
+
+volumes:
+  pgdata:

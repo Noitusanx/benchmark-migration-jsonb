@@ -52,8 +52,7 @@ docker compose build benchmark
 Coba semua metode dan semua skenario dengan 1.000 user, satu trial terukur, tanpa warmup:
 
 ```bash
-BENCH_USERS=1000 SCENARIOS=insert,update,mixed,unchanged WARMUPS=0 REPETITIONS=1 \
-  docker compose run --rm benchmark
+docker compose run --rm -e BENCH_USERS=1000 -e SCENARIOS=insert,update,mixed,unchanged -e WARMUPS=0 -e REPETITIONS=1 benchmark
 ```
 
 Ini smoke test, **bukan** hasil final untuk menentukan metode tercepat.
@@ -64,7 +63,7 @@ container PostgreSQL, volume database, atau CSV di Mac.
 Baseline yang lebih baik untuk 1.000 user:
 
 ```bash
-BENCH_USERS=1000 WARMUPS=1 REPETITIONS=5 docker compose run --rm benchmark
+docker compose run --rm -e BENCH_USERS=1000 -e WARMUPS=1 -e REPETITIONS=5 benchmark
 ```
 
 Default penuh (1.000 / 5.000 / 10.000 user):
@@ -83,9 +82,53 @@ Metode berjalan bergantian, bukan paralel; urutan metode diacak deterministik ti
 cp -R results "results-backup-$(date +%Y%m%d-%H%M%S)"
 ```
 
+### Custom: JDBC saja, insert, 5.000 user
+
+Salin perintah berikut sebagai **satu baris**. Opsi `-e` langsung menentukan environment
+variable di container, sehingga tidak bergantung pada variabel shell yang belum di-export.
+
+```bash
+docker compose run --rm -e BENCH_USERS=5000 -e METHODS=jdbc -e SCENARIOS=insert -e WARMUPS=1 -e REPETITIONS=5 benchmark
+```
+
+Output awal harus menyebut `Dummy ready: 5,000 users`, lalu hanya metode `jdbc` dan
+skenario `insert`. Ingat: ini insert melalui writer upsert, bukan insert-only tanpa lookup.
+
+### Simpan setiap run ke folder berbeda (disarankan)
+
+Buat nama folder baru setiap percobaan agar hasil tidak tertimpa:
+
+```bash
+run="jdbc-insert-5000-$(date +%Y%m%d-%H%M%S)"
+docker compose run --rm -e OUTPUT_DIR="/app/results/$run" -e BENCH_USERS=5000 -e METHODS=jdbc -e SCENARIOS=insert -e WARMUPS=1 -e REPETITIONS=5 benchmark
+```
+
+Folder `/app/results` di container terhubung ke `./results` di komputer. File otomatis
+tersimpan di `results/$run/`, berisi summary.csv, runs.csv, batches.csv, environment.txt.
+
+```bash
+column -s, -t < "results/$run/summary.csv"
+```
+
+Ini menyimpan **file pengukuran**, bukan snapshot database. Tabel lab tetap direset.
+Jangan memakai nama folder yang sama untuk run berikutnya jika ingin menjaga hasil lama.
+
 Jika run gagal, jangan menggunakan summary lama. Runner menghapus summary lama sebelum setup.
-Hasil insert-only versi sebelumnya disimpan di `archives/insert-before-upsert-*` ketika
-implementasi upsert dilakukan. Jangan gabungkan CSV lama tanpa kolom scenario dengan CSV baru.
+Hasil insert-only versi sebelumnya disimpan secara lokal di `archives/insert-before-upsert-*`
+ketika implementasi upsert dilakukan; folder tersebut tidak disertakan ke GitHub.
+Jangan gabungkan CSV lama tanpa kolom scenario dengan CSV baru.
+
+### File yang disertakan ke GitHub
+
+`.gitignore` mengecualikan target build, hasil/backup benchmark, archives, konfigurasi IDE,
+file OS, log, dan file credential lokal. `results/.gitkeep` dipertahankan agar folder output
+tersedia setelah clone. Source code, SQL, Docker, pom.xml, README, dan diagram di docs tetap
+bisa dimasukkan ke repository.
+
+Sebelum commit/push, periksa `git status --short` dan pastikan tidak ada data asli atau
+credential produksi. `.gitignore` tidak menghapus file yang sudah tracked, tidak membersihkan
+history Git, dan tidak menyembunyikan secret yang ditulis di file source/config biasa.
+Konfigurasi database dalam compose adalah khusus lab, bukan credential produksi.
 
 ## 3. Empat skenario, bukan empat aturan bisnis
 
@@ -112,8 +155,7 @@ Semua metode menerima kondisi yang identik. Setup target ini tidak masuk waktu m
 Pilih skenario atau metode tertentu:
 
 ```bash
-BENCH_USERS=1000 SCENARIOS=update METHODS=jdbc,mybatis WARMUPS=1 REPETITIONS=5 \
-  docker compose run --rm benchmark
+docker compose run --rm -e BENCH_USERS=1000 -e SCENARIOS=update -e METHODS=jdbc,mybatis -e WARMUPS=1 -e REPETITIONS=5 benchmark
 ```
 
 ## 4. Data dummy dan bentuk hasil
@@ -188,6 +230,7 @@ Pembacaan sumber berada di luar transaksi penulisan; sumber diasumsikan tetap.
 | WRITE_BATCH_SIZE | 100 | Maksimal item dalam chunk lookup dan pengiriman/flush |
 | WARMUPS | 1 | Trial pemanasan per kombinasi, dikeluarkan dari summary |
 | REPETITIONS | 5 | Trial terukur per kombinasi |
+| OUTPUT_DIR | /app/results di Docker; results saat lokal | Folder CSV; gunakan subfolder berbeda untuk menyimpan setiap run |
 
 500 user menghasilkan 9.500 item target. Diproses dalam chunk maksimal 100 item per jenis
 untuk lookup dan penulisan, tetapi hanya satu commit setelah ketiga jenis selesai.

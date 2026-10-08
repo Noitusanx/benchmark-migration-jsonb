@@ -1,0 +1,41 @@
+# Maven / Java build artifacts
+/target/
+*.class
+*.hprof
+
+# Local benchmark results and backups (keep the empty output folder)
+/results/*
+!/results/.gitkeep
+/results-backup*/
+/archives/
+
+# IDE configuration
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Operating system files
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+
+# Runtime logs
+*.log
+
+# Local environment files and credentials
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+/src/main/resources/application-local.properties
+/src/main/resources/application-local.yml
+/src/main/resources/application-local.yaml

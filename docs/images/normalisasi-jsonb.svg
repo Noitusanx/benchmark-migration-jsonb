@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-labelledby="title description">
+  <title id="title">Normalisasi JSONB: hasil user lab dan usulan konfigurasi kupon</title>
+  <desc id="description">JSON grup, kupon, dan benefit user sudah dipecah ke tiga tabel lab. Pemecahan periode dan requirement master kupon masih usulan, belum diimplementasikan. JSON sumber tetap dipertahankan.</desc>
+  <defs>
+    <marker id="blueArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#1763a6"/></marker>
+    <marker id="goldArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#b77700"/></marker>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #172b4d; }
+      .title { font-size: 27px; font-weight: 700; }
+      .heading { font-size: 20px; font-weight: 700; }
+      .body { font-size: 17px; }
+      .small { font-size: 15px; }
+      .label { font-size: 16px; font-weight: 700; }
+      .source { fill: #f4f6f8; stroke: #607080; stroke-width: 2; }
+      .actual { fill: #e7f3ff; stroke: #1763a6; stroke-width: 2; }
+      .proposal { fill: #fff2d6; stroke: #b77700; stroke-width: 2; stroke-dasharray: 7 5; }
+    </style>
+  </defs>
+  <rect width="1200" height="900" fill="white"/>
+  <text x="40" y="45" class="title">Normalisasi JSONB: sebelum dan sesudah</text>
+  <text x="40" y="74" class="small">Model aktual lab dibedakan dari usulan. Bukan klaim database produksi sudah dimigrasikan.</text>
+  <text x="60" y="119" class="heading">SEBELUM: data di kolom JSONB</text>
+  <text x="570" y="119" class="heading">SESUDAH: item menjadi baris tabel</text>
+
+  <rect x="40" y="136" width="1120" height="339" rx="14" fill="#f8fbff" stroke="#c5d9ec"/>
+  <text x="60" y="166" class="label">USER — SUDAH ADA DI LAB</text>
+  <rect x="60" y="190" width="360" height="233" rx="10" class="source"/>
+  <text x="80" y="221" class="heading">lab_java.m_user</text>
+  <text x="80" y="254" class="body">id, account_no</text>
+  <text x="80" y="291" class="body">GROUP: JSON berisi banyak grup</text>
+  <text x="80" y="328" class="body">COUPONS: JSON berisi banyak kupon</text>
+  <text x="80" y="365" class="body">BENEFIT: daily / weekly / monthly</text>
+  <text x="80" y="399" class="small">Ketiga JSON berada di satu baris user.</text>
+
+  <rect x="570" y="189" width="555" height="69" rx="8" class="actual"/>
+  <text x="590" y="215" class="heading">user_reward_group</text>
+  <text x="590" y="242" class="body">user_id + reward_group_id + detail grup</text>
+  <rect x="570" y="278" width="555" height="69" rx="8" class="actual"/>
+  <text x="590" y="304" class="heading">user_coupon</text>
+  <text x="590" y="331" class="body">user_id + coupon_id + counter pemakaian</text>
+  <rect x="570" y="367" width="555" height="69" rx="8" class="actual"/>
+  <text x="590" y="393" class="heading">user_benefit</text>
+  <text x="590" y="420" class="body">user_id + period_type + amount / tanggal</text>
+  <path d="M420 285 L470 285 L470 223 L565 223" fill="none" stroke="#1763a6" stroke-width="2.5" marker-end="url(#blueArrow)"/>
+  <path d="M420 323 L515 323 L515 312 L565 312" fill="none" stroke="#1763a6" stroke-width="2.5" marker-end="url(#blueArrow)"/>
+  <path d="M420 360 L470 360 L470 401 L565 401" fill="none" stroke="#1763a6" stroke-width="2.5" marker-end="url(#blueArrow)"/>
+  <text x="60" y="456" class="small">Satu item JSON menjadi satu baris target. JSON sumber tidak dihapus. Master kupon/grup belum dibuat di lab.</text>
+
+  <rect x="40" y="496" width="1120" height="303" rx="14" fill="#fffdf6" stroke="#ead5a5"/>
+  <text x="60" y="527" class="label">KONFIGURASI KUPON — USULAN, BELUM DIBUAT</text>
+  <rect x="60" y="550" width="360" height="211" rx="10" class="source"/>
+  <text x="80" y="584" class="heading">m_coupon (sumber yang diberikan)</text>
+  <text x="80" y="622" class="body">ELIGIBLE_PERIOD (JSONB)</text>
+  <text x="80" y="649" class="small">day, date, time</text>
+  <text x="80" y="697" class="body">REQUIREMENT (JSONB)</text>
+  <text x="80" y="724" class="small">eligible / ineligible + daftar syarat</text>
+
+  <rect x="570" y="549" width="555" height="96" rx="8" class="proposal"/>
+  <text x="590" y="578" class="heading">Tabel hari, tanggal, dan rentang jam</text>
+  <text x="590" y="606" class="body">Setiap daftar dipisahkan, diberi coupon_id.</text>
+  <text x="590" y="632" class="small">Ditambah pencatatan kondisi daftar/root.</text>
+  <rect x="570" y="669" width="555" height="96" rx="8" class="proposal"/>
+  <text x="590" y="698" class="heading">Kelompok → daftar → nilai requirement</text>
+  <text x="590" y="726" class="body">eligible/ineligible, mcc/mid/..., nilai dan urutan.</text>
+  <text x="590" y="752" class="small">Kosong, null, field hilang, dan * tetap dibedakan.</text>
+  <path d="M420 618 L485 618 L485 597 L565 597" fill="none" stroke="#b77700" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#goldArrow)"/>
+  <path d="M420 693 L485 693 L485 717 L565 717" fill="none" stroke="#b77700" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#goldArrow)"/>
+  <text x="60" y="784" class="small">ELIGIBLE_MCC tersendiri, audit trail, dan automation belum termasuk rancangan ini.</text>
+
+  <rect x="40" y="821" width="1120" height="57" rx="9" fill="#f4f6f8"/>
+  <text x="60" y="844" class="small">Biru / garis utuh = sudah ada di lab. Kuning / garis putus-putus = rancangan untuk review.</text>
+  <text x="60" y="867" class="small">Normalisasi mengatur bentuk data. Upsert mengatur cara menulis data. Desain produksi masih perlu persetujuan.</text>
+</svg>
